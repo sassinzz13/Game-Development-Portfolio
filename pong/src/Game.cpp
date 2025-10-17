@@ -29,7 +29,7 @@ bool Game::Initialize()
 
     //initialize the window 
     mWindow = SDL_CreateWindow(
-        "Game Programming in C++ (Chapter 1)", // title
+        "Pongers", // title
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
