@@ -1,0 +1,136 @@
+#include "../include/Game.hpp"
+#include <SDL2/SDL.h> 
+#include <SDL2/SDL_keyboard.h>
+#include <SDL2/SDL_render.h>
+#include <SDL2/SDL_scancode.h>
+
+// Constructor
+Game::Game()
+    : mWindow(nullptr),
+      mIsRunning(true),
+      mRenderer(nullptr),
+      mPaddlePos{512.0f, 700.0f},
+      mBallPos{512.0f, 384.0f}
+{
+}
+
+// Initialize SDL and create the window
+bool Game::Initialize()
+{
+    if (SDL_Init(SDL_INIT_VIDEO) != 0)
+    {
+        SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
+        return false;
+    }
+
+    //initialize the window 
+    mWindow = SDL_CreateWindow(
+        "Game Programming in C++ (Chapter 1)", // title
+        100, 100,                               // top-left coordinates
+        1024, 768,                              // width and height
+        0                                       // no flags
+    );
+
+    //initialize the graphics window
+    mRenderer = SDL_CreateRenderer(
+    mWindow, // Window to create the renderer,  
+    -1,  // Usually -1 = use first available rendering driver
+    SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC // Flags
+    );
+
+    if (!mWindow)
+    {
+        SDL_Log("Failed to create window: %s", SDL_GetError());
+        return false;
+    }
+
+    return true; // ✅ Always return true on success
+}
+
+// Render objects to the screen
+void Game::GenerateOutput(){
+  const int thickness = 15;
+  SDL_SetRenderDrawColor(
+    mRenderer,
+    0,//r
+    0,//g 
+    255,//b 
+    255//a
+  );
+  SDL_RenderClear(mRenderer);
+  SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, 255);
+  SDL_Rect wall{
+    0,
+    0,
+    1024,
+    thickness
+  };
+
+  SDL_Rect ball{
+    //static cast to convert floats to ints
+  static_cast<int>(mBallPos.x - thickness/2),
+  static_cast<int>(mBallPos.y - thickness/2),
+  thickness,
+  thickness
+  };
+
+  SDL_Rect paddle{
+    static_cast<int>(mPaddlePos.x - 50/2), // half-width
+    static_cast<int>(mPaddlePos.y - 10/2), // half-height
+    50,  // width
+    10   // height
+  };
+
+  SDL_RenderFillRect(mRenderer, &paddle);
+  SDL_RenderFillRect(mRenderer, &wall);
+  SDL_RenderFillRect(mRenderer, &ball);
+  SDL_RenderPresent(mRenderer);
+}
+
+void Game::ProcessInput(){
+  const Uint8* state = SDL_GetKeyboardState(NULL);
+  SDL_Event event;
+  while(SDL_PollEvent(&event)){
+    switch(event.type){
+      case SDL_QUIT: mIsRunning = false;
+      break;
+    }
+    if(state[SDL_SCANCODE_ESCAPE]){
+      mIsRunning = false;
+    }
+  }
+}
+
+// Shutdown SDL and destroy the window
+void Game::Shutdown()
+{
+    //Destroy the window if it exist 
+    if (mWindow)
+    {
+        SDL_DestroyWindow(mWindow);
+        mWindow = nullptr;
+    }
+    // Destroy the renderer if it exists
+    if(mRenderer){
+        SDL_DestroyRenderer(mRenderer);
+        mRenderer = nullptr;
+    }
+    SDL_Quit();
+}
+
+// Main game loop
+void Game::RunLoop()
+{
+    while (mIsRunning)
+    {
+        ProcessInput();
+        UpdateGame();
+        GenerateOutput();
+    }
+}
+
+// Empty stubs for now to satisfy the linker
+//void Game::ProcessInput()   { }
+void Game::UpdateGame()     { }
+//void Game::GenerateOutput() { }
+

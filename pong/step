@@ -1,0 +1,116 @@
+Steps in creating a Game loop
+
+1. Create a Game.h(or .hpp) file 
+2.Define the following in code 
+#include <SDL2/SDL.h>
+
+class Game {
+public:
+  Game();
+
+  //Initialize the Game
+  bool Initialize();
+  //Run game until its over
+  void RunLoop();
+  // Shutdowns the game
+  void Shutdown();
+
+private:
+  //Helper functions
+  void ProcessInput();
+  void UpdateGame();
+  void GenerateOutput();
+  //Create window
+  SDL_Window* mWindow;
+  //Game should continue to run
+  bool mIsRunning;
+};
+3. Create a game.cpp(or .cc) file
+4. Paste the following started code
+
+/* This section defines our imports */
+#include "../include/Game.hpp"
+#include <SDL2/SDL.h> 
+#include <SDL2/SDL_keyboard.h>
+#include <SDL2/SDL_scancode.h>
+/*                                 */
+
+/* This section deconstructs our constructors defined in the Game.hpp file */
+
+// This runs the necessary command to create the game 
+Game::Game()
+    : mWindow(nullptr),
+      mIsRunning(true)
+{
+}
+
+// Initialize SDL and create the window
+bool Game::Initialize()
+{
+    if (SDL_Init(SDL_INIT_VIDEO) != 0)
+    {
+        SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
+        return false;
+    }
+
+    mWindow = SDL_CreateWindow(
+        "Game Programming in C++ (Chapter 1)", // title
+        100, 100,                               // top-left coordinates
+        1024, 768,                              // width and height
+        0                                       // no flags
+    );
+
+    if (!mWindow)
+    {
+        SDL_Log("Failed to create window: %s", SDL_GetError());
+        return false;
+    }
+
+    return true; // always return true on success
+}
+
+// Shutdown SDL and destroy the window
+void Game::Shutdown()
+{
+    if (mWindow)
+    {
+        SDL_DestroyWindow(mWindow);
+        mWindow = nullptr;
+    }
+    SDL_Quit();
+}
+
+// Our Process Inputs are defined here 
+void Game::ProcessInput(){
+  const Uint8* state = SDL_GetKeyboardState(NULL); // get keyboard input 
+  SDL_Event event; // defines the event 
+  // while loop to keep the event up and running 
+  while(SDL_PollEvent(&event)){
+    // if we press the X button it quits the qpp 
+    switch(event.type){
+      case SDL_QUIT: mIsRunning = false;
+      break;
+    }
+    //if we press escape it quits the app
+    if(state[SDL_SCANCODE_ESCAPE]){
+      mIsRunning = false;
+    }
+  }
+}
+
+// Main game loop
+void Game::RunLoop()
+{
+    while (mIsRunning)
+    {
+        ProcessInput();
+        UpdateGame();
+        GenerateOutput();
+    }
+}
+
+// Empty stubs for now to satisfy the linker
+//void Game::ProcessInput()   { }
+void Game::UpdateGame()     { }
+void Game::GenerateOutput() { }
+
