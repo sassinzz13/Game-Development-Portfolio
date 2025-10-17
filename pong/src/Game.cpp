@@ -6,7 +6,6 @@
 #include <iostream>
 #include <stdio.h>
 
-// Constructor
 Game::Game()
     : mWindow(nullptr),
       mIsRunning(true),
@@ -101,6 +100,7 @@ void Game::GenerateOutput(){
   SDL_RenderPresent(mRenderer); 
 }
 
+//this section looks confusing af
 void Game::UpdateGame(){
   float deltaTime = (SDL_GetTicks() - mTicksCount) / 1000.f;
   mTicksCount = SDL_GetTicks();
@@ -212,8 +212,4 @@ void Game::RunLoop()
     }
 }
 
-// Empty stubs for now to satisfy the linker
-//void Game::ProcessInput()   { }
-//void Game::UpdateGame()     { }
-//void Game::GenerateOutput() { }
 
