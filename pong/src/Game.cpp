@@ -1,5 +1,5 @@
 #include "../include/Game.hpp"
-#include <SDL2/SDL.h> 
+#include <SDL2/SDL.h>
 #include <SDL2/SDL_keyboard.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
@@ -30,20 +30,21 @@ bool Game::Initialize()
         return false;
     }
 
-    //initialize the window 
+    // Initialize the window
     mWindow = SDL_CreateWindow(
-        "Pongers c++ Edition", // title
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        "Pongers C++ Edition",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
         0
     );
 
-    //initialize the graphics window
+    // Initialize the renderer
     mRenderer = SDL_CreateRenderer(
-    mWindow, // Window to create the renderer,  
-    -1,  // Usually -1 = use first available rendering driver
-    SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC // Flags
+        mWindow,
+        -1,
+        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
     );
 
     if (!mWindow)
@@ -51,197 +52,221 @@ bool Game::Initialize()
         SDL_Log("Failed to create window: %s", SDL_GetError());
         return false;
     }
-   
-    return true; 
+
+    return true;
 }
 
 // Render objects to the screen
-void Game::GenerateOutput(){
-  SDL_SetRenderDrawColor(mRenderer,0,0,255,255);
-  SDL_RenderClear(mRenderer);
-  SDL_SetRenderDrawColor(mRenderer,255,255,255,255);
-  SDL_Rect wall {
-    0,
-    0,
-    1024,
-    WALL_THICKNESS
-  };
-  	SDL_RenderFillRect(mRenderer, &wall);
-  	// Draw bottom wall
-	wall.y = 500 - WALL_THICKNESS;
-	SDL_RenderFillRect(mRenderer, &wall);
-	
-	// Draw right wall
-//	wall.x = 1024 - WALL_THICKNESS;
-	//wall.y = 0;
-	//wall.w = WALL_THICKNESS;
-	//wall.h = 1024;
-  //
-  //SDL_RenderFillRect(mRenderer, &wall);
+void Game::GenerateOutput()
+{
+    SDL_SetRenderDrawColor(mRenderer, 0, 0, 255, 255);
+    SDL_RenderClear(mRenderer);
 
-  //wall.x = 0;         // left edge
- // wall.y = 0;         // top
- // wall.w = WALL_THICKNESS; // width
- // wall.h = 768;       // height	
+    SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, 255);
 
-  // ball
-  SDL_Rect ball {
-    static_cast<int>(mBallPos.x - WALL_THICKNESS/2),
-    static_cast<int>(mBallPos.y - WALL_THICKNESS/2),
-    WALL_THICKNESS,
-    WALL_THICKNESS
-  };
-  SDL_RenderFillRect(mRenderer, &ball);
+    // Top wall
+    SDL_Rect wall{
+        0,
+        0,
+        1024,
+        WALL_THICKNESS
+    };
+    SDL_RenderFillRect(mRenderer, &wall);
 
-  // paddle 
-  SDL_Rect paddle {
-    static_cast<int>(mPaddlePos.x - PADDLE_WIDTH/2),
-    static_cast<int>(mPaddlePos.y - PADDLE_HEIGHT/2),
-    PADDLE_WIDTH,
-    PADDLE_HEIGHT
-  };
-  SDL_RenderFillRect(mRenderer, &paddle);
+    // Bottom wall
+    wall.y = 500 - WALL_THICKNESS;
+    SDL_RenderFillRect(mRenderer, &wall);
 
-  SDL_Rect paddleTwo {
-   static_cast<int>(rightPaddlePos.x - PADDLE_WIDTH/2),
-    static_cast<int>(rightPaddlePos.y - PADDLE_HEIGHT/2),
-    PADDLE_WIDTH,
-    PADDLE_HEIGHT
-  };
-  SDL_RenderFillRect(mRenderer, &paddleTwo);
-  SDL_RenderPresent(mRenderer); 
+    // Ball
+    SDL_Rect ball{
+        static_cast<int>(mBallPos.x - WALL_THICKNESS / 2),
+        static_cast<int>(mBallPos.y - WALL_THICKNESS / 2),
+        WALL_THICKNESS,
+        WALL_THICKNESS
+    };
+    SDL_RenderFillRect(mRenderer, &ball);
+
+    // Left paddle
+    SDL_Rect paddle{
+        static_cast<int>(mPaddlePos.x - PADDLE_WIDTH / 2),
+        static_cast<int>(mPaddlePos.y - PADDLE_HEIGHT / 2),
+        PADDLE_WIDTH,
+        PADDLE_HEIGHT
+    };
+    SDL_RenderFillRect(mRenderer, &paddle);
+
+    // Right paddle
+    SDL_Rect paddleTwo{
+        static_cast<int>(rightPaddlePos.x - PADDLE_WIDTH / 2),
+        static_cast<int>(rightPaddlePos.y - PADDLE_HEIGHT / 2),
+        PADDLE_WIDTH,
+        PADDLE_HEIGHT
+    };
+    SDL_RenderFillRect(mRenderer, &paddleTwo);
+
+    SDL_RenderPresent(mRenderer);
 }
 
-void Game::UpdateGame(){
-  float deltaTime = (SDL_GetTicks() - mTicksCount) / 1000.f;
-  mTicksCount = SDL_GetTicks();
+void Game::UpdateGame()
+{
+    float deltaTime = (SDL_GetTicks() - mTicksCount) / 1000.f;
+    mTicksCount = SDL_GetTicks();
 
-  // frame limiting
-  while(!SDL_TICKS_PASSED(SDL_GetTicks(), mTicksCount + 10));
+    // Frame limiting
+    while (!SDL_TICKS_PASSED(SDL_GetTicks(), mTicksCount + 10));
 
-  //to stop delta time from jumping on stop
-  if(deltaTime > 0.05f){
-    deltaTime = 0.05f;
-  }
-
-  //right paddle 
-  if(rightPaddleDir != 0){
-    rightPaddlePos.y += rightPaddleDir * 300.0f *deltaTime;
-    if(rightPaddlePos.y < (PADDLE_HEIGHT/2.0f + WALL_THICKNESS)){
-      rightPaddlePos.y = PADDLE_HEIGHT/2.0f + WALL_THICKNESS;
+    // Prevent delta time from jumping on stop
+    if (deltaTime > 0.05f)
+    {
+        deltaTime = 0.05f;
     }
-    else if (rightPaddlePos.y > (WINDOW_HEIGHT - PADDLE_HEIGHT/2.0f - WALL_THICKNESS)){
-      rightPaddlePos.y = WINDOW_HEIGHT - PADDLE_HEIGHT / 2.0f - WALL_THICKNESS;
+
+    // Right paddle movement
+    if (rightPaddleDir != 0)
+    {
+        rightPaddlePos.y += rightPaddleDir * 300.0f * deltaTime;
+
+        if (rightPaddlePos.y < (PADDLE_HEIGHT / 2.0f + WALL_THICKNESS))
+        {
+            rightPaddlePos.y = PADDLE_HEIGHT / 2.0f + WALL_THICKNESS;
+        }
+        else if (rightPaddlePos.y > (WINDOW_HEIGHT - PADDLE_HEIGHT / 2.0f - WALL_THICKNESS))
+        {
+            rightPaddlePos.y = WINDOW_HEIGHT - PADDLE_HEIGHT / 2.0f - WALL_THICKNESS;
+        }
     }
-  }
-  //left paddle 
-  if(mPaddleDir != 0){
-    mPaddlePos.y += mPaddleDir * 300.0f * deltaTime;
-    //rightPaddlePos.y += rightPaddleDir * 300.0f * deltaTime;
 
-    //bounderies so that the paddle doesnt go off bounds, basically collision 
-    if(mPaddlePos.y < (PADDLE_HEIGHT/2.0f + WALL_THICKNESS)){
-      mPaddlePos.y = PADDLE_HEIGHT/2.0f + WALL_THICKNESS;
+    // Left paddle movement
+    if (mPaddleDir != 0)
+    {
+        mPaddlePos.y += mPaddleDir * 300.0f * deltaTime;
+
+        if (mPaddlePos.y < (PADDLE_HEIGHT / 2.0f + WALL_THICKNESS))
+        {
+            mPaddlePos.y = PADDLE_HEIGHT / 2.0f + WALL_THICKNESS;
+        }
+        else if (mPaddlePos.y > (WINDOW_HEIGHT - PADDLE_HEIGHT / 2.0f - WALL_THICKNESS))
+        {
+            mPaddlePos.y = WINDOW_HEIGHT - PADDLE_HEIGHT / 2.0f - WALL_THICKNESS;
+        }
     }
-    else if(mPaddlePos.y > (WINDOW_HEIGHT - PADDLE_HEIGHT/2.0f - WALL_THICKNESS)){
-      mPaddlePos.y = WINDOW_HEIGHT - PADDLE_HEIGHT/2.0f - WALL_THICKNESS;  
+
+    // Ball movement
+    mBallPos.x += mBallVel.x * deltaTime;
+    mBallPos.y += mBallVel.y * deltaTime;
+
+    // Wall collision
+    if (mBallPos.y <= WALL_THICKNESS && mBallVel.y < 0.0f)
+    {
+        mBallVel.y *= -1.0f;
     }
-  }
-  mBallPos.x += mBallVel.x * deltaTime;
-  mBallPos.y  += mBallVel.y * deltaTime;
+    else if (mBallPos.y >= WINDOW_HEIGHT - WALL_THICKNESS && mBallVel.y > 0.0f)
+    {
+        mBallVel.y *= -1.0f;
+    }
 
-  //Calculate top wall 
-  if(mBallPos.y <= WALL_THICKNESS && mBallVel.y < 0.0f){
-    mBallVel.y *= -1.0f;
-  }
-  else if(mBallPos.y >= WINDOW_HEIGHT - WALL_THICKNESS && mBallVel.y > 0.0f){
-    mBallVel.y *= -1.0f;
-  }
-  float diff = mBallPos.y - mPaddlePos.y;
-  if(mBallPos.x - WALL_THICKNESS/2 <= mPaddlePos.x + PADDLE_WIDTH/2 &&
-     mBallPos.x + WALL_THICKNESS/2 >= mPaddlePos.x - PADDLE_WIDTH/2 &&
-     diff <= PADDLE_HEIGHT / 2.0f && diff >= -PADDLE_HEIGHT / 2.0f &&
-     mBallVel.x < 0.0f){
-    mBallVel.x *= -1.0f; // bounce
-  }
+    // Left paddle collision
+    float diff = mBallPos.y - mPaddlePos.y;
+    if (mBallPos.x - WALL_THICKNESS / 2 <= mPaddlePos.x + PADDLE_WIDTH / 2 &&
+        mBallPos.x + WALL_THICKNESS / 2 >= mPaddlePos.x - PADDLE_WIDTH / 2 &&
+        diff <= PADDLE_HEIGHT / 2.0f && diff >= -PADDLE_HEIGHT / 2.0f &&
+        mBallVel.x < 0.0f)
+    {
+        mBallVel.x *= -1.0f; // bounce
+    }
 
-  float rightDiff = mBallPos.y  - rightPaddlePos.y;
-  if(mBallPos.x - WALL_THICKNESS/2 <= rightPaddlePos.x + PADDLE_WIDTH/2 &&
-  mBallPos.x + WALL_THICKNESS/2 >=rightPaddlePos.x - PADDLE_WIDTH/2 &&
-  rightDiff <= PADDLE_HEIGHT / 2.0f && rightDiff >= -PADDLE_HEIGHT / 2.0f&&
-  mBallVel.x > 0.0f){ 
-  mBallVel.x *= -1.0f;
-  }
+    // Right paddle collision
+    float rightDiff = mBallPos.y - rightPaddlePos.y;
+    if (mBallPos.x - WALL_THICKNESS / 2 <= rightPaddlePos.x + PADDLE_WIDTH / 2 &&
+        mBallPos.x + WALL_THICKNESS / 2 >= rightPaddlePos.x - PADDLE_WIDTH / 2 &&
+        rightDiff <= PADDLE_HEIGHT / 2.0f && rightDiff >= -PADDLE_HEIGHT / 2.0f &&
+        mBallVel.x > 0.0f)
+    {
+        mBallVel.x *= -1.0f;
+    }
 
-  //right wall collission
-  //if(mBallPos.x >= WINDOW_WIDTH - WALL_THICKNESS && mBallVel.x > 0.0f){
-    //mBallVel.x *= -1.0f;
-  //}
-  if(mBallPos.x + WALL_THICKNESS/2<0){
-    std::cout << "Out of bounds" << std::endl;
-    mIsRunning = false; // terminates
-  }
-  if(mBallPos.x - WALL_THICKNESS/2> WINDOW_WIDTH){
-    std::cout << "Out of bounds" << std::endl;
-    mIsRunning = false; // terminates
-  }
+    // Out of bounds (left)
+    if (mBallPos.x + WALL_THICKNESS / 2 < 0)
+    {
+        std::cout << "Out of bounds (left)" << std::endl;
+        mIsRunning = false;
+    }
+
+    // Out of bounds (right)
+    if (mBallPos.x - WALL_THICKNESS / 2 > WINDOW_WIDTH)
+    {
+        std::cout << "Out of bounds (right)" << std::endl;
+        mIsRunning = false;
+    }
 }
 
-void Game::ProcessInput(){
-  //mPaddleDir = 0;
-  const Uint8* state = SDL_GetKeyboardState(NULL);
-  SDL_Event event;
-  while(SDL_PollEvent(&event)){
-    switch(event.type){
-      case SDL_QUIT: mIsRunning = false;
-      break;
-    }
-    if(state[SDL_SCANCODE_ESCAPE]){
-      mIsRunning = false;
-    }
-    // adds controls to the paddle 
-    if(state[SDL_SCANCODE_W]){
-      mPaddleDir = -1;
-    }
-    if(state[SDL_SCANCODE_S]){
-      mPaddleDir = 1;
-    }
+void Game::ProcessInput()
+{
+    const Uint8* state = SDL_GetKeyboardState(NULL);
+    SDL_Event event;
 
-    //For player 2 
-    if(state[SDL_SCANCODE_I]){
-      rightPaddleDir = -1;
-    }
-    if(state[SDL_SCANCODE_J]){
-      rightPaddleDir = 1;
-    }
+    while (SDL_PollEvent(&event))
+    {
+        switch (event.type)
+        {
+            case SDL_QUIT:
+                mIsRunning = false;
+                break;
+        }
 
+        if (state[SDL_SCANCODE_ESCAPE])
+        {
+            mIsRunning = false;
+        }
 
-    /*
-    restart
-    if(state[SDL_SCANCODE_R]){
-    mBallPos = {WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 2.0f};
-    mBallVel = {-200.0f, 235.0f}; // reset to initial velocity
-    mPaddlePos = {WALL_THICKNESS, WINDOW_HEIGHT / 2.0f};
-    mPaddleDir = 0;
+        // Player 1 controls (W/S)
+        if (state[SDL_SCANCODE_W])
+        {
+            mPaddleDir = -1;
+        }
+        if (state[SDL_SCANCODE_S])
+        {
+            mPaddleDir = 1;
+        }
+
+        // Player 2 controls (I/J)
+        if (state[SDL_SCANCODE_I])
+        {
+            rightPaddleDir = -1;
+        }
+        if (state[SDL_SCANCODE_J])
+        {
+            rightPaddleDir = 1;
+        }
+
+        /*
+        // Restart (optional)
+        if (state[SDL_SCANCODE_R])
+        {
+            mBallPos = {WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 2.0f};
+            mBallVel = {-200.0f, 235.0f};
+            mPaddlePos = {WALL_THICKNESS, WINDOW_HEIGHT / 2.0f};
+            mPaddleDir = 0;
+        }
+        */
     }
-    */
-  }
 }
 
 // Shutdown SDL and destroy the window
 void Game::Shutdown()
 {
-    //Destroy the window if it exist 
     if (mWindow)
     {
         SDL_DestroyWindow(mWindow);
         mWindow = nullptr;
     }
-    // Destroy the renderer if it exists
-    if(mRenderer){
+
+    if (mRenderer)
+    {
         SDL_DestroyRenderer(mRenderer);
         mRenderer = nullptr;
     }
+
     SDL_Quit();
 }
 
@@ -255,9 +280,3 @@ void Game::RunLoop()
         GenerateOutput();
     }
 }
-
-// Empty stubs for now to satisfy the linker
-//void Game::ProcessInput()   { }
-//void Game::UpdateGame()     { }
-//void Game::GenerateOutput() { }
-
