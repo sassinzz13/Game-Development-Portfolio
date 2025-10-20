@@ -6,14 +6,17 @@
 #include <iostream>
 #include <stdio.h>
 
+// Constructor
 Game::Game()
     : mWindow(nullptr),
       mIsRunning(true),
       mRenderer(nullptr),
       mBallPos{WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 2.0f},
       mPaddlePos{WALL_THICKNESS, WINDOW_HEIGHT / 2.0f},
+      rightPaddlePos{WINDOW_WIDTH / 1.02f, WINDOW_HEIGHT / 2.0f},
       mTicksCount(0),
       mPaddleDir(0),
+      rightPaddleDir(0),
       mBallVel{-200.0f, 235.0f}
 {
 }
@@ -29,7 +32,7 @@ bool Game::Initialize()
 
     //initialize the window 
     mWindow = SDL_CreateWindow(
-        "Pongers", // title
+        "Pongers c++ Edition", // title
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
@@ -69,11 +72,12 @@ void Game::GenerateOutput(){
 	SDL_RenderFillRect(mRenderer, &wall);
 	
 	// Draw right wall
-	wall.x = 1024 - WALL_THICKNESS;
-	wall.y = 0;
-	wall.w = WALL_THICKNESS;
-	wall.h = 1024;
-  SDL_RenderFillRect(mRenderer, &wall);
+//	wall.x = 1024 - WALL_THICKNESS;
+	//wall.y = 0;
+	//wall.w = WALL_THICKNESS;
+	//wall.h = 1024;
+  //
+  //SDL_RenderFillRect(mRenderer, &wall);
 
   //wall.x = 0;         // left edge
  // wall.y = 0;         // top
@@ -97,10 +101,17 @@ void Game::GenerateOutput(){
     PADDLE_HEIGHT
   };
   SDL_RenderFillRect(mRenderer, &paddle);
+
+  SDL_Rect paddleTwo {
+   static_cast<int>(rightPaddlePos.x - PADDLE_WIDTH/2),
+    static_cast<int>(rightPaddlePos.y - PADDLE_HEIGHT/2),
+    PADDLE_WIDTH,
+    PADDLE_HEIGHT
+  };
+  SDL_RenderFillRect(mRenderer, &paddleTwo);
   SDL_RenderPresent(mRenderer); 
 }
 
-//this section looks confusing af
 void Game::UpdateGame(){
   float deltaTime = (SDL_GetTicks() - mTicksCount) / 1000.f;
   mTicksCount = SDL_GetTicks();
@@ -113,9 +124,20 @@ void Game::UpdateGame(){
     deltaTime = 0.05f;
   }
 
-  //Updates the paddle position
+  //right paddle 
+  if(rightPaddleDir != 0){
+    rightPaddlePos.y += rightPaddleDir * 300.0f *deltaTime;
+    if(rightPaddlePos.y < (PADDLE_HEIGHT/2.0f + WALL_THICKNESS)){
+      rightPaddlePos.y = PADDLE_HEIGHT/2.0f + WALL_THICKNESS;
+    }
+    else if (rightPaddlePos.y > (WINDOW_HEIGHT - PADDLE_HEIGHT/2.0f - WALL_THICKNESS)){
+      rightPaddlePos.y = WINDOW_HEIGHT - PADDLE_HEIGHT / 2.0f - WALL_THICKNESS;
+    }
+  }
+  //left paddle 
   if(mPaddleDir != 0){
     mPaddlePos.y += mPaddleDir * 300.0f * deltaTime;
+    //rightPaddlePos.y += rightPaddleDir * 300.0f * deltaTime;
 
     //bounderies so that the paddle doesnt go off bounds, basically collision 
     if(mPaddlePos.y < (PADDLE_HEIGHT/2.0f + WALL_THICKNESS)){
@@ -126,7 +148,7 @@ void Game::UpdateGame(){
     }
   }
   mBallPos.x += mBallVel.x * deltaTime;
-  mBallPos.y += mBallVel.y * deltaTime;
+  mBallPos.y  += mBallVel.y * deltaTime;
 
   //Calculate top wall 
   if(mBallPos.y <= WALL_THICKNESS && mBallVel.y < 0.0f){
@@ -143,11 +165,23 @@ void Game::UpdateGame(){
     mBallVel.x *= -1.0f; // bounce
   }
 
-  //right wall collission
-  if(mBallPos.x >= WINDOW_WIDTH - WALL_THICKNESS && mBallVel.x > 0.0f){
-    mBallVel.x *= -1.0f;
+  float rightDiff = mBallPos.y  - rightPaddlePos.y;
+  if(mBallPos.x - WALL_THICKNESS/2 <= rightPaddlePos.x + PADDLE_WIDTH/2 &&
+  mBallPos.x + WALL_THICKNESS/2 >=rightPaddlePos.x - PADDLE_WIDTH/2 &&
+  rightDiff <= PADDLE_HEIGHT / 2.0f && rightDiff >= -PADDLE_HEIGHT / 2.0f&&
+  mBallVel.x > 0.0f){ 
+  mBallVel.x *= -1.0f;
   }
+
+  //right wall collission
+  //if(mBallPos.x >= WINDOW_WIDTH - WALL_THICKNESS && mBallVel.x > 0.0f){
+    //mBallVel.x *= -1.0f;
+  //}
   if(mBallPos.x + WALL_THICKNESS/2<0){
+    std::cout << "Out of bounds" << std::endl;
+    mIsRunning = false; // terminates
+  }
+  if(mBallPos.x - WALL_THICKNESS/2> WINDOW_WIDTH){
     std::cout << "Out of bounds" << std::endl;
     mIsRunning = false; // terminates
   }
@@ -172,6 +206,16 @@ void Game::ProcessInput(){
     if(state[SDL_SCANCODE_S]){
       mPaddleDir = 1;
     }
+
+    //For player 2 
+    if(state[SDL_SCANCODE_I]){
+      rightPaddleDir = -1;
+    }
+    if(state[SDL_SCANCODE_J]){
+      rightPaddleDir = 1;
+    }
+
+
     /*
     restart
     if(state[SDL_SCANCODE_R]){
@@ -212,4 +256,8 @@ void Game::RunLoop()
     }
 }
 
+// Empty stubs for now to satisfy the linker
+//void Game::ProcessInput()   { }
+//void Game::UpdateGame()     { }
+//void Game::GenerateOutput() { }
 

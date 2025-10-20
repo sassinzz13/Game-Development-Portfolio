@@ -13,6 +13,7 @@ static constexpr int WALL_THICKNESS = 15;
 static constexpr int PADDLE_WIDTH = WALL_THICKNESS;
 static constexpr int PADDLE_HEIGHT = 100;
 int mPaddleDir = 0;
+int rightPaddleDir = 0;
 
   // container of coordinates 
 struct Vector2{
@@ -46,4 +47,6 @@ private:
   Vector2 mBallPos;
   Vector2 mBallVel;
   Vector2 mPaddleVel;
+  Vector2 rightPaddlePos;
+  Vector2 rightPaddleVel;
 };
